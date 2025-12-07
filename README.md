@@ -18,40 +18,46 @@ To Create a project on Time series analysis on weather forecasting using ARIMA m
 7. Evaluate model predictions
 ### PROGRAM:
 ```python
+# import libraries
 import pandas as pd
-import numpy as np
 import matplotlib.pyplot as plt
 from statsmodels.tsa.arima.model import ARIMA
 from sklearn.metrics import mean_squared_error
+import numpy as np
 
+# load dataset
+df = pd.read_csv("/content/NFLX.csv")
+df["Date"] = pd.to_datetime(df["Date"])
+df.set_index("Date", inplace=True)
 
-data = pd.read_csv("/content/NFLX.csv")
-data['Date'] = pd.to_datetime(data['Date'])
-data.set_index('Date', inplace=True)
+# arima model function
+def arima_model(df, col, order):
 
-def arima_model(data, target_variable, order):
-    train_size = int(len(data) * 0.8)
-    train_data, test_data = data[:train_size], data[train_size:]
+    # split into train and test
+    n = int(len(df)*0.8)
+    train, test = df[col][:n], df[col][n:]
 
-    model = ARIMA(train_data[target_variable], order=order)
-    fitted_model = model.fit()
-    forecast = fitted_model.forecast(steps=len(test_data))
+    # fit model
+    model = ARIMA(train, order=order).fit()
 
-    rmse = np.sqrt(mean_squared_error(test_data[target_variable], forecast))
+    # forecast
+    pred = model.forecast(len(test))
 
-    plt.figure(figsize=(10, 6))
-    plt.plot(train_data.index, train_data[target_variable], label='Training Data')
-    plt.plot(test_data.index, test_data[target_variable], label='Testing Data')
-    plt.plot(test_data.index, forecast, label='Forecasted Data')
-    plt.xlabel('Date')
-    plt.ylabel(target_variable)
-    plt.title('ARIMA Forecasting for ' + target_variable)
+    # calculate error
+    rmse = np.sqrt(mean_squared_error(test, pred))
+
+    # plot results
+    plt.plot(train, label="Train")
+    plt.plot(test, label="Test")
+    plt.plot(pred, label="Forecast")
+    plt.title(f"ARIMA Forecasting - {col}")
     plt.legend()
     plt.show()
 
-    print("Root Mean Squared Error (RMSE):", rmse)
+    print("RMSE:", rmse)
 
-arima_model(data, 'Close', order=(5,1,0))
+# call function
+arima_model(df, "Close", (5,1,0))
 ```
 ### OUTPUT:
 <img width="851" height="579" alt="image" src="https://github.com/user-attachments/assets/8e5ef785-bb43-41b0-9fbb-e27d29ade746" />
